@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+      crossorigin="anonymous"
+    />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
+    <style>
+      #profile{
+        width: 80px;
+        height: 80px;
+        margin-top: 10px;
+        display:flex;
+        justify-content: center;
+        align-items:center;
+      }
+      .card{
+        display:flex;
+        justify-content: center;
+        align-items:center;
+      }
+      .card-title{
+        font-size: 20px;
+        font-weight: bold;
+      }
+    </style>
+    <script>
+      $(document).ready(function () {
+        //alert("hello");
+        listing();
+        bsCustomFileInput.init();
+      });
+      function listing() {
+        $("#cardBox").empty();
+        $.ajax({
+          type: "GET",
+          url: "/diary",
+          data: {},
+          success: function (response) {
+            let articles = response["post"];
+            let temp_html = ``;
+            for (let i = 0; i < articles.length; i++) {
+              let title = articles[i]["title"];
+              let description = articles[i]["content"];
+              let file = articles[i]['file'];
+              let fileProfile = articles[i]['fileProfile'];
+              let timeShow = articles[i]['createdAt'] || 'date not saved';
+              console.log(file);
+              if(!file){
+                temp_html = `<div class="col-4">
+                  <div class="card">
+                    <img src="../static/image1.jpg" class="card-img-top" alt="#" />
+                    <img src="../static/myimage.jpg" class="card-img-top rounded-circle" alt="#" id="profile" />
+                    <div class="card-body">
+                      <h5 class="card-title">${title}</h5>
+                      <p class="card-text">
+                        ${description}
+                      </p>
+                      <h6 class="card-subtitle mb-2 text-muted">2022.02.14</h6>
+                    </div>
+                  </div>
+                </div>`;
+              }
+              else{
+                temp_html = `<div class="col-4">
+                  <div class="card">
+                    <img src="../${file}" class="card-img-top" alt="#" />
+                    <img src="../${fileProfile}" class="card-img-top rounded-circle" alt="#" id="profile" />
+                    <div class="card-body">
+                      <h5 class="card-title">${title}</h5>
+                      <p class="card-text">
+                        ${description}
+                      </p>
+                      <h6 class="card-subtitle mb-2 text-muted">${timeShow}</h6>
+                    </div>
+                  </div>
+                </div>`;
+              }
+              
+              $("#cardBox").append(temp_html);
+            }
+          },
+        });
+      }
+      function send_data() {
+        let title = $("#titleFilm").val();
+        if (!title) {
+          return alert("you not write title or something in there");
+        }
+        let description = $("#description").val();
+        if (!description) {
+          return alert("you not write description or something in there");
+        }
+        
+        let file = $("#formFile").prop("files")[0];
+        let fileProfile = $("#formFileProfile").prop("files")[0];
+        console.log(fileProfile);
+
+        let form_data = new FormData();
+
+        form_data.append("file_give", file);
+        form_data.append("fileProfile_give", fileProfile);
+        form_data.append("title_give", title);
+        form_data.append('description_give',description);
+
+        $.ajax({
+          type: "POST",
+          url: "/diary",
+          data: form_data,
+          contentType: false,
+          processData: false,
+          success: function (response) {
+            alert(response['msg']);
+            console.log(response);
+            window.location.reload();
+            
+          },
+        });
+      }
+    </script>
+    <title>Sparta Coding Club | Bootstrap Practice</title>
+  </head>
+
+  <body>
+    <div class="container-sm">
+      <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+          <h1 class="display-5 fw-bold">Personal Diary</h1>
+          <div class="mb-3 custom-file">
+            
+            <label for="formFile" class="form-label"> Upload Image</label>
+            <input class="form-control" type="file" id="formFile" />
+          </div>
+          <div class="mb-3 custom-file">
+            
+            <label for="formFileProfile" class="form-label">Upload Image Profile</label>
+            <input class="form-control" type="file" id="formFileProfile" />
+          </div>
+          <div class="form-floating mb-3">
+            <input
+              type="text"
+              class="form-control"
+              id="titleFilm"
+              placeholder="write some title here"
+            />
+            <label for="titleFilm">Input Title</label>
+          </div>
+          <div class="form-floating mb-3">
+            <textarea
+              class="form-control"
+              placeholder="Leave a comment here"
+              id="description"
+            ></textarea>
+            <label for="description">descriptions</label>
+          </div>
+          <button
+            class="btn btn-primary btn-lg"
+            type="sumbit"
+            onclick="send_data()"
+          >
+            save
+          </button>
+        </div>
+      </div>
+      <div class="container text-center">
+        <div class="row align-items-center" id="cardBox"></div>
+      </div>
+    </div>
+  </body>
+</html>
